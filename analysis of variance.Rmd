@@ -1,0 +1,224 @@
+---
+title: "Analysis of variance for Rgronomists"
+subtitle: "A tidyverse approach"
+author: "Anicet Ebou<br/>Seedstars<br/>@anicetebou"
+date: "2018/02/24"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Before we dig into rstats
+
+## What we will do today
+
+
+1. Import data
+
+2. Tidying and transforming data
+
+3. Visualise data
+
+4. Model estimation
+
+5. Diagnosis checking
+
+
+## What is ANOVA ?
+
+![](/home/ediman/anova_1.png)
+
+## Another example...
+
+![](/home/ediman/anova_2.jpg)
+
+## Keypoints
+
+- What is your goal ?
+
+- What objective do you want to achieve with this analysis ?
+
+- Ask yourself if this analysis is the best way to reach your goal ?
+
+- What is your experimental design ?
+
+
+## Understand your data
+
+![](process_1.png)
+
+## Hypothesis
+
+$$ H_0:\mu_{TRAIT}=\mu_{STAND}=\mu_{RAIS}$$
+$$ H_1:\exists (k,s), \mu_k\neq\mu_s$$
+
+# Data Import
+
+## Importing from Excel sheet
+
+- Our dataset is in .xlsx format so we will use the `readxl` package.
+
+```{r echo=TRUE}
+
+library(readxl)
+dataset <- read_excel("dataset.xlsx")
+View(dataset) # or dataset
+```
+
+## Importing from Excel sheet
+
+```{r echo=FALSE}
+dataset
+```
+
+# Tidying and transforming data
+
+## What is a tidy dataset ?
+
+
+From Hadley Wickham, a dataset is tidy when : 
+
+* Each variable must have its own column.   
+* Each observation must have its own row.    
+* Each value must have its own cell.  
+ 
+
+![](tidy_1.png)
+
+## Linear models reminder : stochastic linear model
+
+$$ Y_{ij}=\beta_0+\beta_iX_{i}+\epsilon_{ij}, i = 1,...,n; j = 1, ..., k$$
+
+* Y is the dependant variable: the variable we study.
+* X is the independant variable: the variable controlled by the experimenter.
+* Epsilon is the error.
+* Beta is the general mean. 
+
+
+## Transforming data
+
+- We'll use the package `dplyr` for the purpose of transforming our data.
+
+```{r echo=TRUE , message=FALSE}
+library(tidyverse)
+first_anova <- dataset %>%
+  select(bloc,trait, HAUT) %>%
+  group_by(trait)
+```
+
+- By this operation we have selected `the variables` (columns) bloc, trait and HAUT, and group values by 'trait'.
+
+- Now we can do the anova analysing the height of plants varying by treatment.
+
+## Initial inspection
+
+```{r echo=TRUE}
+ggplot(data = first_anova) + 
+  geom_boxplot(mapping = aes(x = trait, y = HAUT, color = trait))
+```
+
+# Estimate the model
+
+## Estimate the model
+
+```{r echo=TRUE}
+library(broom)
+model_1 <- aov(HAUT ~ trait + bloc, first_anova)
+tidy_model <- tidy(model_1)
+tidy_model
+```
+
+## Estimate the model
+
+```{r echo=TRUE}
+
+head(augment(model_1))
+```
+
+## Estimate the model
+
+```{r echo=TRUE}
+glance(model_1)
+```
+
+# Diagnosis checking
+
+## Multiple comparisons of mean
+
+```{r echo=TRUE}
+library(agricolae)
+snk_test <- SNK.test(model_1, "trait")
+```
+
+## Multiple comparisons of mean
+
+```{r}
+snk_test
+```
+
+## A beautiful graph to finish the analysis
+
+* Generate the table  
+
+```{r echo=TRUE}
+by_trait_sem <- dataset %>%
+  select(sem,trait,HAUT) %>%
+  group_by(trait, sem)
+
+table_graph <- summarise(by_trait_sem, 
+               count = n(), 
+               Hauteur = mean(HAUT, na.rm = TRUE),
+               sd = sd(HAUT, na.rm = TRUE),
+               se = sd / sqrt(count)
+               )
+```
+
+## A beautiful graph to finish analysis
+
+```{r echo=TRUE}
+table_graph
+```
+
+## Graph
+
+```{r echo=TRUE}
+graph <- ggplot(data = table_graph, 
+                aes(x = sem, y = Hauteur, colour = trait)) + 
+  geom_line() + 
+  geom_point() + 
+  geom_errorbar(aes(ymax = Hauteur + se, 
+                    ymin = Hauteur - se)
+                , width = .25) + 
+  labs(x = "Nombre de semaines"
+       , y = "Hauteur des plantes") + 
+  scale_x_discrete(limits = c("S3","S4","S5", "S6","S7"
+                              ,"S8", "S9", "S10", "S11", "S12")
+                   )
+```
+
+## Graph
+
+<div class="centered">
+
+```{r echo=FALSE}
+graph
+```
+</div>
+## Any Questions ? 
+
+<div class="centered">
+![](kakapo_3.jpg)
+
+</div>
+
+## Your turn
+
+You are going to do analysis of variance for the two remaining factors: circumference and number of leafs.  
+
+<div class="centered">
+Let's Go !!!
+
+![](kakapo_2.jpg)
+</div>
