@@ -1,5 +1,7 @@
 # File description
 
+For english users, pleqse refer to `datasets.xlsx` file.
+
 The following dataset is the result of an experimentation that took place in Ivory Coast in 2017.
 
 The goal was to record the height, the number of leafs and the circumference of plants once a week begining 3 weeks after sowing
@@ -13,6 +15,8 @@ a gradient.
 ----
 
 # Description du fichier
+
+Pour les utilisateurs francophones, veuillez vous référrer au fichier `jeu de données.xlsx`.
 
 Les données dans cet dossier proviennent d'une expérimentation conduite en 2017.
 
